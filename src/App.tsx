@@ -6,6 +6,8 @@ import ChatStats from './components/ChatStats';
 import { initializeWebLLMEngine, streamingGenerating, availableModels, setProgressCallback, modelDetailsList } from './utils/llm';
 import '@fontsource/inter';
 import ChatHeader from './components/ChatHeader';
+import { SystemSpecs } from './utils/systemSpecs';
+import ModelSelectorFullscreen from './components/ModelSelectorFullscreen';
 
 const TEMPERATURE = 0.7;
 const TOP_P = 1;
@@ -42,6 +44,29 @@ function App() {
   const [loadingProgress, setLoadingProgress] = useState<string>('');
   const [isModelSelectorVisible, setIsModelSelectorVisible] = useState<boolean>(true);
   const [areChatStatsVisible, setAreChatStatsVisible] = useState<boolean>(true);
+  const [systemSpecs, setSystemSpecs] = useState<SystemSpecs | null>(null);
+
+  const [isModelLoading, setIsModelLoading] = useState(false);
+  
+  const handleModelSelect = async (model: string) => {
+    setIsModelLoading(true);
+    try {
+      await initializeWebLLMEngine(
+        model,
+        TEMPERATURE,
+        TOP_P,
+        () => {
+          setIsModelLoaded(true);
+          setIsModelLoading(false);
+          setIsModelSelectorVisible(false);
+        }
+      );
+    } catch (error) {
+      console.error("Error loading model:", error);
+      setLoadingProgress('Error loading model. Please try again.');
+      setIsModelLoading(false);
+    }
+  };
 
   const downloadStatusRef = useRef<HTMLDivElement>(null);
 
@@ -167,19 +192,15 @@ function App() {
       )}
       
       {/* Model Selector */}
-      {isModelSelectorVisible && (
-        <div className="flex-shrink-0 px-4 py-6 sm:px-6">
-          <ModelSelector
-            selectedModel={selectedModel}
-            setSelectedModel={setSelectedModel}
-            onModelLoad={handleModelLoad}
-            isModelLoaded={isModelLoaded}
-            availableModels={availableModels}
-            loadProgress={loadingProgress}
-          />
-          <div ref={downloadStatusRef} id="download-status" className="text-center text-sm text-gray-400 mt-2"></div>
-        </div>
-      )}
+    {isModelSelectorVisible && (
+        <ModelSelectorFullscreen
+          onSelectModel={handleModelSelect}
+          availableModels={availableModels}
+          systemSpecs={systemSpecs}
+          loadingProgress={loadingProgress}
+          isLoading={isModelLoading}
+        />
+    )}
 
       {/* Chat Area */}
       {isModelLoaded && (
