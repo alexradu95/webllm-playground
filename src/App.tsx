@@ -5,8 +5,9 @@ import ChatStats from './components/Chat/ChatStats';
 import { initializeWebLLMEngine, streamingGenerating, availableModels, setProgressCallback, modelDetailsList } from './utils/llm';
 import '@fontsource/inter';
 import ChatHeader from './components/Chat/ChatHeader';
-import { SystemSpecs } from './utils/systemSpecs';
+import { SystemSpecs, getSystemSpecs } from './utils/systemSpecs';
 import ModelSelector from './components/ModelSelect/ModelSelector';
+import SystemSpecsIndicator from './components/ModelSelect/SystemSpecsIndicator';
 
 const TEMPERATURE = 0.7;
 const TOP_P = 1;
@@ -44,11 +45,11 @@ function App() {
   const [isModelSelectorVisible, setIsModelSelectorVisible] = useState<boolean>(true);
   const [areChatStatsVisible, setAreChatStatsVisible] = useState<boolean>(true);
   const [systemSpecs, setSystemSpecs] = useState<SystemSpecs | null>(null);
-
   const [isModelLoading, setIsModelLoading] = useState(false);
   
   const handleModelSelect = async (model: string) => {
     setIsModelLoading(true);
+    setSelectedModel(model);
     try {
       await initializeWebLLMEngine(
         model,
@@ -72,29 +73,17 @@ function App() {
   useEffect(() => {
     document.title = PAGE_TITLE;
 
+    // Initialize system specs
+    const initSystemSpecs = async () => {
+      const specs = await getSystemSpecs();
+      setSystemSpecs(specs);
+    };
+    
+    initSystemSpecs();
     setProgressCallback((progress: string) => {
       setLoadingProgress(progress);
     });
   }, []);
-
-  const handleModelLoad = async (): Promise<void> => {
-    try {
-      setLoadingProgress('Loading...');
-      await initializeWebLLMEngine(
-        selectedModel,
-        TEMPERATURE,
-        TOP_P,
-        () => {
-          setIsModelLoaded(true);
-          setLoadingProgress('Model loaded successfully');
-          setIsModelSelectorVisible(false);
-        }
-      );
-    } catch (error) {
-      console.error("Error loading model:", error);
-      setLoadingProgress('Error loading model. Please try again.');
-    }
-  };
 
   const handleSendMessage = async (input: string): Promise<void> => {
     if (!isModelLoaded || input.trim().length === 0) return;
@@ -120,7 +109,6 @@ function App() {
             prefillSpeed: Math.round(usage.extra?.prefill_tokens_per_s) || 0,
             decodingSpeed: Math.round(usage.extra?.decode_tokens_per_s) || 0,
           };
-
 
           setChatStatistics(updatedStats);
           setIsGeneratingResponse(false);
@@ -191,7 +179,7 @@ function App() {
       )}
       
       {/* Model Selector */}
-    {isModelSelectorVisible && (
+      {isModelSelectorVisible && (
         <ModelSelector
           onSelectModel={handleModelSelect}
           availableModels={availableModels}
@@ -199,17 +187,17 @@ function App() {
           loadingProgress={loadingProgress}
           isLoading={isModelLoading}
         />
-    )}
+      )}
 
       {/* Chat Area */}
       {isModelLoaded && (
         <div className="flex-grow flex flex-col overflow-auto px-4 sm:px-6">
           <div className="flex-grow max-w-3xl w-full mx-auto flex flex-col h-full">
             <ChatBox 
-            messages={chatMessages} 
-            onExampleClick={handleExampleSelection} 
-            isGenerating={isGeneratingResponse}
-          />
+              messages={chatMessages} 
+              onExampleClick={handleExampleSelection} 
+              isGenerating={isGeneratingResponse}
+            />
           </div>
         </div>
       )}
@@ -218,9 +206,9 @@ function App() {
       {isModelLoaded && (
         <div className="sticky bottom-0 bg-[#121212]">
           <InputArea 
-          onSendMessage={handleSendMessage} 
-          isGenerating={isGeneratingResponse} 
-          isModelLoaded={isModelLoaded} 
+            onSendMessage={handleSendMessage} 
+            isGenerating={isGeneratingResponse} 
+            isModelLoaded={isModelLoaded} 
           />
         </div>
       )}
@@ -230,6 +218,14 @@ function App() {
         <ChatStats 
           stats={chatStatistics} 
           onClose={() => setAreChatStatsVisible(false)} 
+        />
+      )}
+
+      {/* System Specs Indicator */}
+      {systemSpecs && !isModelSelectorVisible && (
+        <SystemSpecsIndicator 
+          specs={systemSpecs} 
+          selectedModel={selectedModel}
         />
       )}
     </div>

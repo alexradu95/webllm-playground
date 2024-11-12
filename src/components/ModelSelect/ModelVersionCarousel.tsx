@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, X, AlertCircle, Loader2, Star } from 'lucide-react';
+import { SystemSpecs, getModelTier, getModelCompatibilityBadge } from '../../utils/systemSpecs';
 
 interface ModelVersionCarouselProps {
   isOpen: boolean;
@@ -11,6 +12,7 @@ interface ModelVersionCarouselProps {
   isLoading: boolean;
   favoriteModels: string[];
   onToggleFavorite: (model: string) => void;
+  systemSpecs: SystemSpecs | null;
 }
 
 interface ConfirmationModalProps {
@@ -80,7 +82,11 @@ const ModelCard: React.FC<{
   isFavorite: boolean;
   onToggleFavorite: (e: React.MouseEvent) => void;
   isActive: boolean;
-}> = ({ version, onSelect, isFavorite, onToggleFavorite, isActive }) => {
+  systemSpecs: SystemSpecs | null;
+}> = ({ version, onSelect, isFavorite, onToggleFavorite, isActive, systemSpecs }) => {
+  const modelTier = systemSpecs ? getModelTier(version, systemSpecs) : null;
+  const badge = modelTier ? getModelCompatibilityBadge(modelTier) : null;
+
   const getQuantizationInfo = (version: string) => {
     const match = version.match(/q[2-8]|8bit|4bit/i);
     return match ? match[0].toUpperCase() : 'FP16';
@@ -97,17 +103,7 @@ const ModelCard: React.FC<{
         isActive ? 'ring-2 ring-blue-500' : ''
       }`}
     >
-      <button
-        onClick={onToggleFavorite}
-        className="absolute top-2 right-2 p-1 rounded-full hover:bg-gray-700 transition-colors"
-      >
-        <Star
-          className={`w-5 h-5 ${
-            isFavorite ? 'fill-yellow-500 text-yellow-500' : 'text-gray-400'
-          }`}
-        />
-      </button>
-      <div className="mb-4 space-y-2">
+      <div className="flex justify-between items-start mb-4">
         <div className="flex flex-wrap gap-2">
           <span className="inline-block px-2 py-1 bg-blue-500 text-white text-xs rounded-full">
             {getQuantizationInfo(version)}
@@ -117,7 +113,25 @@ const ModelCard: React.FC<{
               {getModelSize(version)}
             </span>
           )}
+          {badge && (
+            <span 
+              className={`inline-block px-2 py-1 ${badge.color} text-white text-xs rounded-full`}
+              title={badge.description}
+            >
+              {badge.label}
+            </span>
+          )}
         </div>
+        <button
+          onClick={onToggleFavorite}
+          className="p-1 rounded-full hover:bg-gray-700 transition-colors"
+        >
+          <Star
+            className={`w-5 h-5 ${
+              isFavorite ? 'fill-yellow-500 text-yellow-500' : 'text-gray-400'
+            }`}
+          />
+        </button>
       </div>
       <h3 className="text-sm font-medium text-white mb-3 line-clamp-2">{version}</h3>
       <button
@@ -140,6 +154,7 @@ const ModelVersionCarousel: React.FC<ModelVersionCarouselProps> = ({
   isLoading,
   favoriteModels,
   onToggleFavorite,
+  systemSpecs,
 }) => {
   const [currentPage, setCurrentPage] = useState(0);
   const [selectedModel, setSelectedModel] = useState<string | null>(null);
@@ -233,6 +248,7 @@ const ModelVersionCarousel: React.FC<ModelVersionCarouselProps> = ({
                   onToggleFavorite(version);
                 }}
                 isActive={selectedModel === version}
+                systemSpecs={systemSpecs}
               />
             ))}
           </div>

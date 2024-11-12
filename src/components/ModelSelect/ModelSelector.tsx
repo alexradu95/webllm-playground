@@ -174,8 +174,7 @@ const ModelSelectorFullscreen: React.FC<ModelSelectorFullscreenProps> = ({
       {/* Favorites Section */}
       <FavoriteModelsSection />
 
-      {/* Rest of the component remains the same... */}
-      {/* Just add a Star button to each model card in the grid */}
+      {/* Model Families Grid */}
       <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {modelFamilies
           .filter(family => {
@@ -233,6 +232,7 @@ const ModelSelectorFullscreen: React.FC<ModelSelectorFullscreenProps> = ({
           loadingProgress={loadingProgress}
           favoriteModels={favoriteModels}
           onToggleFavorite={toggleFavorite}
+          systemSpecs={systemSpecs}
         />
       )}
     </div>
