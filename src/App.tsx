@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from 'react';
-import ModelSelector from './components/ModelSelector';
 import ChatBox from './components/Chat/ChatBox';
 import InputArea from "./components/Chat/InputArea";
 import ChatStats from './components/Chat/ChatStats';
@@ -7,7 +6,7 @@ import { initializeWebLLMEngine, streamingGenerating, availableModels, setProgre
 import '@fontsource/inter';
 import ChatHeader from './components/Chat/ChatHeader';
 import { SystemSpecs } from './utils/systemSpecs';
-import ModelSelectorFullscreen from './components/ModelSelectorFullscreen';
+import ModelSelector from './components/ModelSelector';
 
 const TEMPERATURE = 0.7;
 const TOP_P = 1;
@@ -153,7 +152,7 @@ function App() {
       break;
     }
   }
-  const SelectedModelIcon = selectedModelDetails ? selectedModelDetails.icon : null;
+  const SelectedModelIcon = null;
 
   if (!IS_WEB_GPU_ENABLED) {
     return (
@@ -193,7 +192,7 @@ function App() {
       
       {/* Model Selector */}
     {isModelSelectorVisible && (
-        <ModelSelectorFullscreen
+        <ModelSelector
           onSelectModel={handleModelSelect}
           availableModels={availableModels}
           systemSpecs={systemSpecs}
