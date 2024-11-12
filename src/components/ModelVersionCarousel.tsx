@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, X, AlertCircle, Loader2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, X, AlertCircle, Loader2, Star } from 'lucide-react';
 
 interface ModelVersionCarouselProps {
   isOpen: boolean;
@@ -9,6 +9,8 @@ interface ModelVersionCarouselProps {
   modelFamily: string;
   loadingProgress: string;
   isLoading: boolean;
+  favoriteModels: string[];
+  onToggleFavorite: (model: string) => void;
 }
 
 interface ConfirmationModalProps {
@@ -62,12 +64,68 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
             <Loader2 className="w-8 h-8 text-blue-500 animate-spin mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-white mb-2">Loading Model</h3>
             <p className="text-gray-400 mb-4">{loadingProgress || 'Initializing...'}</p>
-            <div className="w-full bg-gray-800 rounded-full h-2">
-              <div className="bg-blue-500 h-2 rounded-full animate-pulse" />
+            <div className="w-full bg-gray-800 rounded-full h-2 overflow-hidden">
+              <div className="bg-blue-500 h-full w-full animate-pulse" />
             </div>
           </div>
         )}
       </div>
+    </div>
+  );
+};
+
+const ModelCard: React.FC<{
+  version: string;
+  onSelect: () => void;
+  isFavorite: boolean;
+  onToggleFavorite: (e: React.MouseEvent) => void;
+  isActive: boolean;
+}> = ({ version, onSelect, isFavorite, onToggleFavorite, isActive }) => {
+  const getQuantizationInfo = (version: string) => {
+    const match = version.match(/q[2-8]|8bit|4bit/i);
+    return match ? match[0].toUpperCase() : 'FP16';
+  };
+
+  const getModelSize = (version: string) => {
+    const match = version.match(/\d+B/i);
+    return match ? match[0] : '';
+  };
+
+  return (
+    <div
+      className={`relative bg-gray-800 rounded-lg p-4 transition-all duration-200 ${
+        isActive ? 'ring-2 ring-blue-500' : ''
+      }`}
+    >
+      <button
+        onClick={onToggleFavorite}
+        className="absolute top-2 right-2 p-1 rounded-full hover:bg-gray-700 transition-colors"
+      >
+        <Star
+          className={`w-5 h-5 ${
+            isFavorite ? 'fill-yellow-500 text-yellow-500' : 'text-gray-400'
+          }`}
+        />
+      </button>
+      <div className="mb-4 space-y-2">
+        <div className="flex flex-wrap gap-2">
+          <span className="inline-block px-2 py-1 bg-blue-500 text-white text-xs rounded-full">
+            {getQuantizationInfo(version)}
+          </span>
+          {getModelSize(version) && (
+            <span className="inline-block px-2 py-1 bg-purple-500 text-white text-xs rounded-full">
+              {getModelSize(version)}
+            </span>
+          )}
+        </div>
+      </div>
+      <h3 className="text-sm font-medium text-white mb-3 line-clamp-2">{version}</h3>
+      <button
+        onClick={onSelect}
+        className="w-full mt-2 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition-colors"
+      >
+        Select Model
+      </button>
     </div>
   );
 };
@@ -80,24 +138,27 @@ const ModelVersionCarousel: React.FC<ModelVersionCarouselProps> = ({
   modelFamily,
   loadingProgress,
   isLoading,
+  favoriteModels,
+  onToggleFavorite,
 }) => {
   const [currentPage, setCurrentPage] = useState(0);
   const [selectedModel, setSelectedModel] = useState<string | null>(null);
   const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
 
-  useEffect(() => {
-    if (!isLoading && selectedModel) {
-      setIsConfirmationOpen(false);
-      setSelectedModel(null);
-    }
-  }, [isLoading]);
-
-  if (!isOpen) return null;
-
   const ITEMS_PER_PAGE = 20; // 4x5 grid
   const TOTAL_PAGES = Math.ceil(versions.length / ITEMS_PER_PAGE);
+
+  // Sort versions to show favorites first
+  const sortedVersions = [...versions].sort((a, b) => {
+    const aIsFavorite = favoriteModels.includes(a);
+    const bIsFavorite = favoriteModels.includes(b);
+    if (aIsFavorite && !bIsFavorite) return -1;
+    if (!aIsFavorite && bIsFavorite) return 1;
+    return a.localeCompare(b);
+  });
+
   const startIdx = currentPage * ITEMS_PER_PAGE;
-  const visibleVersions = versions.slice(startIdx, startIdx + ITEMS_PER_PAGE);
+  const visibleVersions = sortedVersions.slice(startIdx, startIdx + ITEMS_PER_PAGE);
 
   const handlePrevious = () => {
     setCurrentPage((prev) => (prev === 0 ? TOTAL_PAGES - 1 : prev - 1));
@@ -117,75 +178,62 @@ const ModelVersionCarousel: React.FC<ModelVersionCarouselProps> = ({
     onSelect(selectedModel);
   };
 
-  const getQuantizationInfo = (version: string) => {
-    const match = version.match(/q[2-8]|8bit|4bit/i);
-    return match ? match[0].toUpperCase() : 'FP16';
-  };
+  useEffect(() => {
+    if (!isLoading && selectedModel) {
+      setIsConfirmationOpen(false);
+      setSelectedModel(null);
+    }
+  }, [isLoading]);
 
-  const getModelSize = (version: string) => {
-    const match = version.match(/\d+B/i);
-    return match ? match[0] : '';
-  };
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50">
-      <div className="bg-gray-900 rounded-xl w-full max-w-7xl p-6 relative">
-        <button
-          onClick={onClose}
-          className="absolute right-4 top-4 text-gray-400 hover:text-white transition-colors"
-          disabled={isLoading}
-        >
-          <X size={24} />
-        </button>
+      <div className="bg-gray-900 rounded-xl w-full max-w-7xl p-6 relative max-h-[90vh] overflow-hidden flex flex-col">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold text-white">{modelFamily} Versions</h2>
+          <button
+            onClick={onClose}
+            disabled={isLoading}
+            className="text-gray-400 hover:text-white transition-colors disabled:opacity-50"
+          >
+            <X size={24} />
+          </button>
+        </div>
 
-        <h2 className="text-2xl font-bold mb-6 text-white">{modelFamily} Versions</h2>
-
-        <div className="relative">
+        <div className="relative flex-1 overflow-hidden">
           {TOTAL_PAGES > 1 && (
             <>
               <button
                 onClick={handlePrevious}
-                className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 bg-gray-800 rounded-full p-2 text-gray-400 hover:text-white transition-colors z-10"
                 disabled={isLoading}
+                className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 bg-gray-800 rounded-full p-2 text-gray-400 hover:text-white transition-colors z-10 disabled:opacity-50"
               >
                 <ChevronLeft size={24} />
               </button>
-
               <button
                 onClick={handleNext}
-                className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 bg-gray-800 rounded-full p-2 text-gray-400 hover:text-white transition-colors z-10"
                 disabled={isLoading}
+                className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 bg-gray-800 rounded-full p-2 text-gray-400 hover:text-white transition-colors z-10 disabled:opacity-50"
               >
                 <ChevronRight size={24} />
               </button>
             </>
           )}
 
-          <div className="grid grid-cols-4 gap-4 px-8">
+          <div className="grid grid-cols-4 gap-4 px-8 overflow-y-auto max-h-[calc(90vh-12rem)]">
             {visibleVersions.map((version) => (
-              <button
+              <ModelCard
                 key={version}
-                onClick={() => handleModelClick(version)}
-                className="bg-gray-800 rounded-lg p-4 text-left hover:bg-gray-700 transition-colors group disabled:opacity-50"
-                disabled={isLoading}
-              >
-                <div className="flex flex-wrap gap-2 mb-3">
-                  <span className="px-2 py-1 bg-blue-500 text-xs text-white rounded-full">
-                    {getQuantizationInfo(version)}
-                  </span>
-                  {getModelSize(version) && (
-                    <span className="px-2 py-1 bg-purple-500 text-xs text-white rounded-full">
-                      {getModelSize(version)}
-                    </span>
-                  )}
-                </div>
-                <h3 className="text-sm font-medium text-white mb-2 line-clamp-2">
-                  {version}
-                </h3>
-                <span className="text-xs text-blue-400 group-hover:text-blue-300">
-                  Select →
-                </span>
-              </button>
+                version={version}
+                onSelect={() => handleModelClick(version)}
+                isFavorite={favoriteModels.includes(version)}
+                onToggleFavorite={(e) => {
+                  e.stopPropagation();
+                  onToggleFavorite(version);
+                }}
+                isActive={selectedModel === version}
+              />
             ))}
           </div>
         </div>
@@ -196,10 +244,10 @@ const ModelVersionCarousel: React.FC<ModelVersionCarouselProps> = ({
               <button
                 key={index}
                 onClick={() => setCurrentPage(index)}
-                className={`w-2 h-2 rounded-full transition-colors ${
+                disabled={isLoading}
+                className={`w-2 h-2 rounded-full transition-colors disabled:opacity-50 ${
                   index === currentPage ? 'bg-blue-500' : 'bg-gray-600'
                 }`}
-                disabled={isLoading}
               />
             ))}
           </div>
