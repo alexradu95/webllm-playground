@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import ModelSelector from './components/ModelSelector';
-import ChatBox from './components/ChatBox';
-import InputArea from "./components/InputArea";
-import ChatStats from './components/ChatStats';
+import ChatBox from './components/Chat/ChatBox';
+import InputArea from "./components/Chat/InputArea";
+import ChatStats from './components/Chat/ChatStats';
 import { initializeWebLLMEngine, streamingGenerating, availableModels, setProgressCallback, modelDetailsList } from './utils/llm';
 import '@fontsource/inter';
-import ChatHeader from './components/ChatHeader';
+import ChatHeader from './components/Chat/ChatHeader';
 import { SystemSpecs } from './utils/systemSpecs';
 import ModelSelectorFullscreen from './components/ModelSelectorFullscreen';
 

@@ -1,25 +1,15 @@
 import * as webllm from "@mlc-ai/web-llm";
-import {
-  MetaIcon,
-  MicrosoftIcon,
-  MistralIcon,
-  GoogleIcon,
-  QwenIcon,
-  SmolLMIcon,
-} from '../components/icons';
 
 export interface ModelDetails {
   name: string;
-  icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
 }
 
 export const modelDetailsList: ModelDetails[] = [
-  { name: 'llama', icon: MetaIcon },
-  { name: 'phi', icon: MicrosoftIcon },
-  { name: 'mistral', icon: MistralIcon },
-  { name: 'gemma', icon: GoogleIcon },
-  { name: 'qwen', icon: QwenIcon },
-  { name: 'smollm', icon: SmolLMIcon },
+  { name: 'llama' },
+  { name: 'mistral' },
+  { name: 'gemma'},
+  { name: 'qwen'},
+  { name: 'smollm'},
 ];
 
 let engine: webllm.MLCEngine | null = null;
