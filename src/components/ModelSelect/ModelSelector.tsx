@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Star, Filter } from 'lucide-react';
-import { SystemSpecs } from '../utils/systemSpecs';
+import { SystemSpecs } from '../../utils/systemSpecs';
+import { getFavoriteModels, getModelSize, MODEL_SIZES, saveFavoriteModels } from '../../constants';
 import ModelVersionCarousel from './ModelVersionCarousel';
-import { MODEL_SIZES, getModelSize, getFavoriteModels, saveFavoriteModels } from '../constants';
 
 interface ModelSelectorFullscreenProps {
   onSelectModel: (model: string) => Promise<void>;

@@ -6,7 +6,7 @@ import { initializeWebLLMEngine, streamingGenerating, availableModels, setProgre
 import '@fontsource/inter';
 import ChatHeader from './components/Chat/ChatHeader';
 import { SystemSpecs } from './utils/systemSpecs';
-import ModelSelector from './components/ModelSelector';
+import ModelSelector from './components/ModelSelect/ModelSelector';
 
 const TEMPERATURE = 0.7;
 const TOP_P = 1;
