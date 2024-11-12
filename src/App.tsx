@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from 'react';
-import Header from './components/Header';
 import ModelSelector from './components/ModelSelector';
 import ChatBox from './components/ChatBox';
 import InputArea from "./components/InputArea";
@@ -135,7 +134,6 @@ function App() {
     return (
       <div className="min-h-screen flex flex-col bg-[#121212] text-gray-300 font-inter">
         <div className="px-4 py-6 sm:px-6">
-          <Header heading={PAGE_HEADING} description={PAGE_DESCRIPTION} />
           <p className="text-center text-xl text-white mt-2">
             WebGPU is not supported in your browser. 😢
           </p>
@@ -171,7 +169,6 @@ function App() {
       {/* Model Selector */}
       {isModelSelectorVisible && (
         <div className="flex-shrink-0 px-4 py-6 sm:px-6">
-          <Header heading={PAGE_HEADING} description={PAGE_DESCRIPTION} />
           <ModelSelector
             selectedModel={selectedModel}
             setSelectedModel={setSelectedModel}

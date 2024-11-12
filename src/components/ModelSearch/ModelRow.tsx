@@ -1,5 +1,8 @@
+// src/components/ModelSearch/ModelRow.tsx
+
 import React from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
+import { ModelTier, getModelCompatibilityBadge } from '../../utils/systemSpecs';
 
 interface ModelRowProps {
   baseModel: string;
@@ -11,6 +14,7 @@ interface ModelRowProps {
   onSelectModel: (model: string) => void;
   onClose: () => void;
   handleToggleExpand: (modelName: string) => void;
+  modelTier: ModelTier;
 }
 
 const ModelRow: React.FC<ModelRowProps> = ({
@@ -23,8 +27,10 @@ const ModelRow: React.FC<ModelRowProps> = ({
   onSelectModel,
   onClose,
   handleToggleExpand,
+  modelTier
 }) => {
   const { quantBadge } = hasSingleVariant ? extractModelDetails(variants[0]) : { quantBadge: null };
+  const compatibilityBadge = getModelCompatibilityBadge(modelTier);
 
   return (
     <div className="flex flex-col bg-[var(--bg-color)] border border-[var(--border-color)] rounded-lg overflow-hidden" key={baseModel}>
@@ -40,16 +46,24 @@ const ModelRow: React.FC<ModelRowProps> = ({
         }}
       >
         <div className="flex items-center justify-between">
-          <div className="flex items-center">
+          <div className="flex items-center flex-grow">
             {determineModelIcon(baseModel)}
             <span className="text-gray-200 text-sm font-medium group-hover:text-white transition-colors ml-2">
               {baseModel}
             </span>
-            {hasSingleVariant && quantBadge && (
-              <span className="ml-2 truncate px-1.5 py-0.5 bg-gray-700 text-gray-300 text-[10px] rounded-full">
-                {quantBadge}
+            <div className="flex items-center ml-2 space-x-2">
+              {hasSingleVariant && quantBadge && (
+                <span className="truncate px-1.5 py-0.5 bg-gray-700 text-gray-300 text-[10px] rounded-full">
+                  {quantBadge}
+                </span>
+              )}
+              <span 
+                className={`px-2 py-0.5 ${compatibilityBadge.color} text-white text-[10px] rounded-full flex items-center`}
+                title={compatibilityBadge.description}
+              >
+                {compatibilityBadge.label}
               </span>
-            )}
+            </div>
           </div>
           {!hasSingleVariant && (
             isExpanded ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />

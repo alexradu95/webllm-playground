@@ -20,7 +20,7 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({
   availableModels,
   loadProgress 
 }) => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(true); // Open modal by default
 
   const openModal = useCallback(() => setIsModalOpen(true), []);
   const closeModal = useCallback(() => setIsModalOpen(false), []);
